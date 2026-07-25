@@ -31,7 +31,7 @@ file(GLOB_RECURSE IPP_FILES
 	"src/*.ipp"
 )
 
-set(GENERATED_CPP_FILES "")
+set(IPP_TRANSLATION_UNITS "")
 
 foreach(ipp ${IPP_FILES})
 	# Extract filename (no extension)
@@ -41,16 +41,18 @@ foreach(ipp ${IPP_FILES})
 	set(out "${CMAKE_CURRENT_BINARY_DIR}/src/${fname}.cpp")
 
 	# Tell configure_file what to substitute
-	set(CxxFile ${ipp})
+	block()
+		set(IppFile ${ipp})
 
-	# Generate the .cpp file
-	configure_file(
-			${CMAKE_CURRENT_SOURCE_DIR}/src/IppFileTemplate.in
-			${out}
-			@ONLY
-	)
+		# Generate the .cpp file
+		configure_file(
+				${CMAKE_CURRENT_SOURCE_DIR}/src/IppFileTemplate.in
+				${out}
+				@ONLY
+		)
+	endblock()
 
-	list(APPEND GENERATED_CPP_FILES ${out})
+	list(APPEND IPP_TRANSLATION_UNITS ${out})
 endforeach()
 
 file(GLOB_RECURSE SRC
@@ -61,7 +63,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED)
 target_sources(${CMAKE_PROJECT_NAME}
 		PRIVATE
 			${SRC}
-			${GENERATED_CPP_FILES}
+			${IPP_TRANSLATION_UNITS}
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME}
