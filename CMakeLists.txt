@@ -27,12 +27,42 @@ if (GENERATE_UNION_API_DLL AND NOT GENERATE_VDF)
 	message(WARNING "GENERATE_UNION_API_DLL is ON but GENERATE_VDF is OFF. UnionAPI.dll won't be included in the release.")
 endif()
 
+file(GLOB_RECURSE IPP_FILES
+	"src/*.ipp"
+)
+
+set(GENERATED_CPP_FILES "")
+
+foreach(ipp ${IPP_FILES})
+	# Extract filename (no extension)
+	get_filename_component(fname ${ipp} NAME_WE)
+
+	# Output file path
+	set(out "${CMAKE_CURRENT_BINARY_DIR}/src/${fname}.cpp")
+
+	# Tell configure_file what to substitute
+	set(CxxFile ${ipp})
+
+	# Generate the .cpp file
+	configure_file(
+			${CMAKE_CURRENT_SOURCE_DIR}/src/IppFileTemplate.in
+			${out}
+			@ONLY
+	)
+
+	list(APPEND GENERATED_CPP_FILES ${out})
+endforeach()
+
 file(GLOB_RECURSE SRC
-    "src/*.cpp"
+	"src/*.cpp"
 )
 
 add_library(${CMAKE_PROJECT_NAME} SHARED)
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${SRC})
+target_sources(${CMAKE_PROJECT_NAME}
+		PRIVATE
+			${SRC}
+			${GENERATED_CPP_FILES}
+)
 
 target_include_directories(${CMAKE_PROJECT_NAME}
     INTERFACE
