@@ -6,6 +6,7 @@ set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 set(PROJECT_VERSION "1.0.0.0" CACHE STRING "Project version")
 
 include(target_add_versioninfo)
+include(generate_ipp_translation_units)
 
 project(UnionPlugin
 	DESCRIPTION "Union plugin for Gothic Games"
@@ -27,37 +28,11 @@ if (GENERATE_UNION_API_DLL AND NOT GENERATE_VDF)
 	message(WARNING "GENERATE_UNION_API_DLL is ON but GENERATE_VDF is OFF. UnionAPI.dll won't be included in the release.")
 endif()
 
-file(GLOB_RECURSE IPP_FILES
-	"src/*.ipp"
-)
-
-set(IPP_TRANSLATION_UNITS "")
-
-foreach(ipp ${IPP_FILES})
-	# Extract filename (no extension)
-	get_filename_component(fname ${ipp} NAME_WE)
-
-	# Output file path
-	set(out "${CMAKE_CURRENT_BINARY_DIR}/src/${fname}.cpp")
-
-	# Tell configure_file what to substitute
-	block()
-		set(IppFile ${ipp})
-
-		# Generate the .cpp file
-		configure_file(
-				${CMAKE_CURRENT_SOURCE_DIR}/src/IppFileTemplate.in
-				${out}
-				@ONLY
-		)
-	endblock()
-
-	list(APPEND IPP_TRANSLATION_UNITS ${out})
-endforeach()
-
 file(GLOB_RECURSE SRC
 	"src/*.cpp"
 )
+
+generate_ipp_translation_units(IPP_TRANSLATION_UNITS)
 
 add_library(${CMAKE_PROJECT_NAME} SHARED)
 target_sources(${CMAKE_PROJECT_NAME}
