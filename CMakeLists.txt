@@ -6,6 +6,7 @@ set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 set(PROJECT_VERSION "1.0.0.0" CACHE STRING "Project version")
 
 include(target_add_versioninfo)
+include(generate_ipp_translation_units)
 
 project(UnionPlugin
 	DESCRIPTION "Union plugin for Gothic Games"
@@ -28,11 +29,17 @@ if (GENERATE_UNION_API_DLL AND NOT GENERATE_VDF)
 endif()
 
 file(GLOB_RECURSE SRC
-    "src/*.cpp"
+	"src/*.cpp"
 )
 
+generate_ipp_translation_units(IPP_TRANSLATION_UNITS)
+
 add_library(${CMAKE_PROJECT_NAME} SHARED)
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${SRC})
+target_sources(${CMAKE_PROJECT_NAME}
+		PRIVATE
+			${SRC}
+			${IPP_TRANSLATION_UNITS}
+)
 
 target_include_directories(${CMAKE_PROJECT_NAME}
     INTERFACE
