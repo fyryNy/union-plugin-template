@@ -36,7 +36,7 @@ function(generate_ipp_translation_units out_variable)
             set(filename "${filename}_${platform_suffix_lowercase}")
 
             # Output file path
-            set(out "${CMAKE_CURRENT_BINARY_DIR}/src/${filename}.cpp")
+            set(out "${CMAKE_CURRENT_BINARY_DIR}/src/generated_ipp/${filename}.cpp")
 
             # Tell configure_file what to substitute
             set(IppFile ${ipp})
