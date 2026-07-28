@@ -25,7 +25,7 @@ function(generate_ipp_translation_units out_variable)
 
     # Delete "generated_ipp" folder first
     set(GENERATED_IPP_DIR "${CMAKE_CURRENT_BINARY_DIR}/src/generated_ipp")
-    file(REMOVE_RECURSE "${GENERATE_IPP_DIR}")
+    file(REMOVE_RECURSE "${GENERATED_IPP_DIR}")
 
     while(GothicEngines)
         list(POP_FRONT GothicEngines PlatformSuffix GothicNamespace)
