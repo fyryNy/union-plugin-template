@@ -23,8 +23,10 @@ function(generate_ipp_translation_units out_variable)
         list(APPEND GothicEngines G2A Gothic_II_Addon)
     endif()
 
-    # Delete "generated_ipp" folder first
+    # Generate helper variable that points to dir where .cpp translation units resides
     set(GENERATED_IPP_DIR "${CMAKE_CURRENT_BINARY_DIR}/src/generated_ipp")
+
+    # Delete "generated_ipp" folder first
     file(REMOVE_RECURSE "${GENERATED_IPP_DIR}")
 
     while(GothicEngines)
@@ -37,17 +39,20 @@ function(generate_ipp_translation_units out_variable)
             string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/src" "" filepath "${ipp}")
 
             # Extract relative_dir & filename (without extensions)
-            get_filename_component(relative_dir "${filepath}" DIRECTORY)
-            get_filename_component(filename_no_ext "${filepath}" NAME_WE)
+            cmake_path(GET filepath PARENT_PATH relative_dir)
+            cmake_path(GET filepath STEM filename_no_ext)
 
             # Generate unique platform file name, e.g (Plugin_g2a.cpp)
-            set(platform_filepath_no_ext "${relative_dir}/${filename_no_ext}_${platform_suffix_lowercase}")
+            if(relative_dir STREQUAL "/")
+                set(platform_filepath_no_ext "/${filename_no_ext}_${platform_suffix_lowercase}")
+            else()
+                set(platform_filepath_no_ext "${relative_dir}/${filename_no_ext}_${platform_suffix_lowercase}")
+            endif()
 
-            # Output file path
             set(out "${GENERATED_IPP_DIR}/${platform_filepath_no_ext}.cpp")
 
-            # Tell configure_file what to substitute
-            set(IppFile ${ipp})
+            # Tell configure_file what to substitute (convert absolute path to relative one)
+            file(RELATIVE_PATH IppFile "${CMAKE_CURRENT_SOURCE_DIR}/src/" "${ipp}")
 
             # Generate the .cpp file
             configure_file(
