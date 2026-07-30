@@ -29,11 +29,18 @@ if (GENERATE_UNION_API_DLL AND NOT GENERATE_VDF)
 	message(WARNING "GENERATE_UNION_API_DLL is ON but GENERATE_VDF is OFF. UnionAPI.dll won't be included in the release.")
 endif()
 
+file(GLOB_RECURSE IPP_FILES
+	"src/*.ipp"
+)
+
 file(GLOB_RECURSE SRC
 	"src/*.cpp"
 )
 
-generate_ipp_translation_units(IPP_TRANSLATION_UNITS)
+generate_ipp_translation_units(
+	INPUT ${IPP_FILES}
+	OUTPUT IPP_TRANSLATION_UNITS
+)
 
 add_library(${CMAKE_PROJECT_NAME} SHARED)
 target_sources(${CMAKE_PROJECT_NAME}
@@ -48,10 +55,13 @@ target_include_directories(${CMAKE_PROJECT_NAME}
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME}
-    BEFORE PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/userapi"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src"
-        "${CMAKE_CURRENT_SOURCE_DIR}/signatures"
+	PRIVATE
+		"${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+
+target_include_directories(${CMAKE_PROJECT_NAME}
+ 	BEFORE PRIVATE
+		"${CMAKE_CURRENT_SOURCE_DIR}/userapi"
 )
 
 target_add_versioninfo(${CMAKE_PROJECT_NAME}
@@ -108,4 +118,9 @@ endif()
 
 add_subdirectory(dependencies)
 
-configure_msvc_wine_intellisense(${CMAKE_PROJECT_NAME} union)
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_EXPORT_COMPILE_COMMANDS)
+	configure_msvc_wine_intellisense(
+		TARGET ${CMAKE_PROJECT_NAME}
+		INPUT ${IPP_FILES}
+	)
+endif()
