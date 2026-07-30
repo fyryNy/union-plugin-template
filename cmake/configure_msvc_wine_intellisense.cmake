@@ -36,9 +36,6 @@ function(configure_msvc_wine_intellisense)
             add_library("${_editor_target}" OBJECT EXCLUDE_FROM_ALL)
 
             target_sources(${_editor_target} PRIVATE ${ARG_INPUT})
-            set_source_files_properties(${ARG_INPUT}
-                PROPERTIES LANGUAGE CXX
-            )
 
             get_target_property(_target_private_include_dirs ${CMAKE_PROJECT_NAME} INCLUDE_DIRECTORIES)
             target_include_directories("${_editor_target}" PRIVATE ${_target_private_include_dirs})
