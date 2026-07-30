@@ -13,11 +13,18 @@ It provides a preconfigured base code designed to simplify the development proce
 Before you start making your own plugin, you need to install some software first, here's a full list of things that you'll need to install to be able to build the union plugin:
 - [git](https://git-scm.com/) **Required** for version control and to clone the project repository
 - [git lfs](https://git-lfs.com/) **Required** to clone the project repository binary files (e.g: `GothicVDFS.exe`)
-- [CMake](https://cmake.org/) **Optional** if you plan to use Visual Studio
-- [Visual Studio](https://visualstudio.microsoft.com/pl/) **Essential** for compiling the plugin using the MSVC toolset  
+- [CMake](https://cmake.org/) **Required** for command-line and Linux builds; optional when using Visual Studio's bundled CMake
+- [Visual Studio](https://visualstudio.microsoft.com/pl/) **Required on Windows** for compiling the plugin using the MSVC toolset
 	(make sure to install **C++ Workload** and **CMake Tools for Visual Studio**)
 
-The Union plugin requires the MSVC toolset for compatibility, so alternative toolchains like MinGW are not supported.
+Linux builds additionally require:
+- [mstorsjo/msvc-wine](https://github.com/mstorsjo/msvc-wine) with the x86 MSVC and Windows SDK files installed
+- [Ninja](https://ninja-build.org/)
+- [Wine](https://www.winehq.org/)
+- Clang/`clang-cl` for VS Code IntelliSense
+
+The Union plugin still uses the real MSVC toolset on Linux through msvc-wine.
+Alternative toolchains such as MinGW are not used.
 
 # Fetching the source code
 
@@ -32,6 +39,23 @@ git clone --recursive URL_TO_YOUR_REPO
 The plugin template contains special file called `CMakeUserConfigPresets.json`  
 in which you can manully specify the variables for your own needs.  
 
+Linux users should set the root of their msvc-wine installation in the
+`msvc-wine-config` preset:
+
+```json
+{
+  "name": "msvc-wine-config",
+  "hidden": true,
+  "cacheVariables": {
+    "MSVC_WINE_ROOT": "$env{HOME}/my_msvc/opt/msvc"
+  }
+}
+```
+
+Change only the value when msvc-wine is installed elsewhere. Use an absolute
+path or `$env{HOME}`; CMake presets do not expand `~`. The selected directory
+must contain `bin/x86`, `VC/Tools/MSVC`, and `Windows Kits/10`.
+
 **NOTE!** By default this file is tracked via git, but it shouldn't be, to not track it,  
 type this command in root repo dir:  
 ```bash
@@ -45,7 +69,7 @@ Some of the common things that you should propably change are:
 - **project version**  
 	default value is **1.0.0.0**
 
-# Building
+# Building on Windows
 
 Follow the steps below to compile the plugin:
 
@@ -69,6 +93,51 @@ Follow the steps below to compile the plugin:
 
 1. Once everything is configured, click **Build Solution** (or press **Ctrl+Shift+B**).
 2. If you've configured everything correctly, the build process should complete successfully.
+
+# Building on Linux
+
+After installing msvc-wine and setting `MSVC_WINE_ROOT`, configure and build
+the preset matching the desired game and build type:
+
+```bash
+cmake --fresh --preset G2A-Release-msvc-wine
+cmake --build --preset G2A-Release-msvc-wine
+```
+
+Available Linux presets follow the same `G1`, `G1A`, `G2`, `G2A`, and `MP`
+plus `Debug` or `Release` naming as the Windows presets, with
+`-msvc-wine` appended. For example:
+
+```text
+G1-Debug-msvc-wine
+G1-Release-msvc-wine
+G2A-Release-msvc-wine
+MP-Release-msvc-wine
+```
+
+Use MP only when the plugin supports all four engines. The Linux build creates
+a 32-bit Windows DLL and packages the VDF in `out/build/PRESET_NAME/vdf/`.
+`GothicVDFS.exe` runs through Wine automatically on Linux.
+
+## VS Code IntelliSense on Linux
+
+The repository includes configurations for Microsoft C/C++ and clangd.
+Configuring a Linux preset generates `compile_commands.json` and selects that
+preset for IntelliSense automatically. The current `.ipp` sources receive
+editor-only compilation entries with the matching Gothic engine context;
+these entries do not add objects to normal plugin builds.
+
+The C/C++ extension automatically selects the `Linux` configuration on Linux
+and the `Win32` configuration on Windows. Windows uses the CMake Tools
+configuration provider instead of the Linux compilation database. A root
+symlink left by Linux is harmless on Windows and remains available when the
+workspace is opened on Linux again.
+
+After configuring for the first time or changing presets, run
+**C/C++: Reset IntelliSense Database** and **Developer: Reload Window** in VS
+Code. Open `src/Plugin.ipp` and run **C/C++: Log Diagnostics** to verify that
+the active translation unit contains the MSVC, Windows SDK, Gothic API, and
+Union API include paths.
 
 # Plugin installation
 

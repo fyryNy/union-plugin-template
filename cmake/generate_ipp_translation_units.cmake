@@ -1,27 +1,21 @@
-function(generate_ipp_translation_units out_variable)
+include(get_targeted_gothic_engines)
+
+function(generate_ipp_translation_units)
+    cmake_parse_arguments(ARG "" "INPUT;OUTPUT" "" ${ARGN})
+
+	if (NOT DEFINED ARG_INPUT)
+		message(SEND_ERROR "generate_ipp_translation_units function requires INPUT argument")
+		return()
+	endif()
+
+    if (NOT DEFINED ARG_OUTPUT)
+		message(SEND_ERROR "generate_ipp_translation_units function requires OUTPUT argument")
+		return()
+	endif()
+
     set(ipp_translation_units "")
 
-    file(GLOB_RECURSE IppFiles
-        "src/*.ipp"
-    )
-
-    set(GothicEngines "")
-
-    if(GOTHIC_API_G1)
-        list(APPEND GothicEngines G1 Gothic_I_Classic)
-    endif()
-
-    if(GOTHIC_API_G1A)
-        list(APPEND GothicEngines G1A Gothic_I_Addon)
-    endif()
-
-    if(GOTHIC_API_G2)
-        list(APPEND GothicEngines G2 Gothic_II_Classic)
-    endif()
-
-    if(GOTHIC_API_G2A)
-        list(APPEND GothicEngines G2A Gothic_II_Addon)
-    endif()
+    get_targeted_gothic_engines(GothicEngines)
 
     # Generate helper variable that points to dir where .cpp translation units resides
     set(GENERATED_IPP_DIR "${CMAKE_CURRENT_BINARY_DIR}/src/generated_ipp")
@@ -34,7 +28,7 @@ function(generate_ipp_translation_units out_variable)
 
         string(TOLOWER "${PlatformSuffix}" platform_suffix_lowercase)
 
-        foreach(ipp ${IppFiles})
+        foreach(ipp ${ARG_INPUT})
             # Extract relative src filepath
             string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/src" "" filepath "${ipp}")
 
@@ -65,5 +59,5 @@ function(generate_ipp_translation_units out_variable)
         endforeach()
     endwhile()
 
-    set(${out_variable} ${ipp_translation_units} PARENT_SCOPE)
+    set(${ARG_OUTPUT} ${ipp_translation_units} PARENT_SCOPE)
 endfunction()
